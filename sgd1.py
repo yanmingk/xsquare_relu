@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from class_dataset import MyDataSet
 from class_model import MyModel
-from train_model import train_with_adam
+from train_model import train_with_SGD
 from test_model import test_error, test, plot
 from torch import nn
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ max_errors_m = []
 train_losses_m = []
 norm_g_m = []
 range_m = 8
-num_models = 3
+num_models = 5
 
 
 for m in range(7,range_m):
@@ -39,9 +39,9 @@ for m in range(7,range_m):
         train_losses = []
         norm_g = []
         model = MyModel(1, 3, 1, m, 'optimal')
-        train_with_adam(model, criterion, trainset,
-                    int(np.max( [np.power(2.0,m), 2]) ), 1e-2, 5000 ,0,#5000, 0,#np.power(10.0,-2*m-2),#-1 -3 int(np.power(10.0,-m-2)),#1e-3, 
-                    train_losses, norm_g, record_g = True , verbose=False)
+        train_with_SGD(model, criterion, trainset,
+                    int(np.max( [np.power(2.0,m), 2]) ), 8e-2, 0.9, 0.01, 20000, 0,
+                    train_losses, norm_g, record_g = True, verbose=False)
 
         (mean_err, max_err) = test_error(model, means, stds, npoints = int(np.power(2,m+2))+1, verbose = False)
         train_losses_m.append(train_losses)
@@ -73,13 +73,13 @@ plt.legend()
 plt.xlabel('m')
 plt.ylabel('${\log_2(\epsilon)}$')
 
-plt.savefig(f'C:\\Users\\Yanming\\codes\\square\\adam.png')
+plt.savefig(f'C:\\Users\\Yanming\\codes\\square\\SGD.png')
 
 
 
 for m in range(7,range_m):
     for j in range(num_models):
-        i = (m-1 -6)*num_models + j
+        i = (m-1-6)*num_models + j
 
         print(len(train_losses_m[i]))
         plt.cla()
@@ -100,7 +100,7 @@ for m in range(7,range_m):
         plt.plot(list(range(len(norm_g_m[i]))), np.log10(torch.cat([norm_g_m[i][j]-norm_g_m[i][-1] for j in range(len(norm_g_m[i]))]).numpy()))
         plt.xlabel('iteration')
         plt.ylabel('${\log_{10}(grad/grad[-1])}$')
-        plt.savefig(f'figures/LBFGS-m{m}model{j}')
+        plt.savefig(f'figures/SGD20k-m{m}model{j}')
 
         n=50
 
@@ -136,4 +136,4 @@ for m in range(7,range_m):
         plt.plot(list(range(len(moving_avg))), np.log10([moving_avg[k]-moving_avg[-1] for k in range(len(moving_avg))]))
         plt.xlabel('iteration')
         plt.ylabel('${\log_{10}(grad/grad[-1])}$_avg')
-        plt.savefig(f'figures/LBFGS-m{m}model{j}_avg50')
+        plt.savefig(f'figures/SGD20k-m{m}model{j}_avg50')
